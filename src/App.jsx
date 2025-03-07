@@ -43,7 +43,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 function XVRModel(props) {
   const group = useRef();
-  const { scene, animations } = useGLTF("/models/VRPrototypeBaked-v1.glb");
+  const { scene, animations } = useGLTF("/models/VRPrototypeBaked-v2.glb");
   const { ref, actions, names, mixer } = useAnimations(animations, group);
 
   useEffect(() => {
