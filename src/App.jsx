@@ -12,7 +12,7 @@ import {
   Stats,
   MeshReflectorMaterial,
 } from "@react-three/drei";
-import { useControls } from "leva";
+//import { useControls } from "leva";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -43,7 +43,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 function XVRModel(props) {
   const group = useRef();
-  const { scene, animations } = useGLTF("/models/VRPrototypeBaked-v2.glb");
+  const { scene, animations } = useGLTF("/models/VRPrototypeBaked-v3.glb");
   const { ref, actions, names, mixer } = useAnimations(animations, group);
 
   useEffect(() => {
@@ -78,37 +78,49 @@ function XVRModel(props) {
   return <primitive object={scene} ref={ref} />;
 }
 
-// function Box(props) {
-//   const meshRef = useRef();
-//   const [hovered, setHover] = useState(false);
-//   const [active, setActive] = useState(false);
-
-//   useFrame((state, delta) => (meshRef.current.rotation.x += delta));
-
-//   return (
-//     <mesh
-//       {...props}
-//       ref={meshRef}
-//       scale={active ? 1.5 : 1}
-//       onClick={() => setActive(!active)}
-//       onPointerOver={() => setHover(true)}
-//       onPointerOut={() => setHover(false)}
-//     >
-//       <boxGeometry args={[1, 1, 1]} />
-//       <meshStandardMaterial color={hovered ? "hotpink" : "orange"} />
-//     </mesh>
-//   );
-// }
-
 export default function App() {
-  const { ...config } = useControls({
-    size: { value: 15, min: 0, max: 50 },
-    focus: { value: 0.5, min: 0, max: 2 },
-    samples: { value: 6, min: 1, max: 10, step: 1 },
-    // dark_material_color: { value: "#1cbcf2" },
-    // light_material_color: { value: "#dbf6ff" },
-    // thickness_map: true,
-  });
+  // const { ...config } = useControls({
+  //   size: { value: 15, min: 0, max: 50 },
+  //   focus: { value: 0.5, min: 0, max: 2 },
+  //   samples: { value: 6, min: 1, max: 10, step: 1 },
+  //   // dark_material_color: { value: "#1cbcf2" },
+  //   // light_material_color: { value: "#dbf6ff" },
+  //   // thickness_map: true,
+  // });
+
+  const autoRotateRef = useRef(true);
+  const [autoRotateState, setAutoRotateState] = useState(true);
+
+  const timeOutRef = useRef(null);
+
+  const config = { size: 12.5, focus: 0.0, samples: 10 };
+
+  function bindEventsToSameHandler(element, events, handler) {
+    for (var i = 0; i < events.length; i++) {
+      element.addEventListener(events[i], handler);
+    }
+  }
+
+  function handler() {
+    setAutoRotateState(false);
+    clearTimeout(timeOutRef.current);
+    timeOutRef.current = setTimeout(() => {
+      setAutoRotateState(true);
+    }, 6000);
+  }
+
+  useEffect(() => {
+    const element = document.getElementById("canvas_container");
+    if (!element) return; // Ensure element exists
+
+    const events = ["click", "scroll"];
+    bindEventsToSameHandler(element, events, handler);
+
+    return () => {
+      events.forEach((event) => element.removeEventListener(event, handler));
+    };
+  }, []);
+
   return (
     <Canvas
       id="canvas_container"
@@ -118,7 +130,7 @@ export default function App() {
     >
       <Environment
         files="/hdri/royal_esplanade_1k.hdr"
-        // background
+        //background
         // backgroundBlurriness={0.5}
       />
       <SoftShadows {...config} />
@@ -170,7 +182,7 @@ export default function App() {
         <shadowMaterial transparent opacity={0.4} />
       </mesh>
 
-      <OrbitControls enableZoom={false} />
+      <OrbitControls enableZoom={false} autoRotate={autoRotateState} />
       <Stats />
     </Canvas>
   );
