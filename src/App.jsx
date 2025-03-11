@@ -1,7 +1,10 @@
 import { createRoot } from "react-dom/client";
 import React, { useRef, useState, useEffect } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useThree, useFrame } from "@react-three/fiber";
+import * as THREE from "three";
 import "./styles.css";
+
+import Hotspot from "./components/hotspot_2.jsx";
 
 import {
   useGLTF,
@@ -43,8 +46,13 @@ gsap.registerPlugin(ScrollTrigger);
 
 function XVRModel(props) {
   const group = useRef();
-  const { scene, animations } = useGLTF("/models/VRPrototypeBaked-v3.glb");
+  const { camera } = useThree();
+  const { scene, animations } = useGLTF(
+    "/models/VR Prototype Baked with anchors.glb"
+  );
   const { ref, actions, names, mixer } = useAnimations(animations, group);
+  const raycaster = useRef(new THREE.Raycaster());
+  const mouse = useRef(new THREE.Vector2());
 
   useEffect(() => {
     scene.traverse((child) => {
@@ -56,26 +64,45 @@ function XVRModel(props) {
 
     if (actions[names[0]]) {
       const action = actions[names[0]];
-      action.play(); // Play but keep it controlled via seek
-      action.paused = true; // Prevent automatic playing
+      action.play();
+      action.paused = true;
 
-      // Link scroll progress to animation
       ScrollTrigger.create({
         trigger: "#canvas_container",
         start: "top",
         end: "1000px",
         pin: true,
-        scrub: 1, // Smooth animation control
+        scrub: 1,
         markers: true,
         onUpdate: (self) => {
-          const progress = self.progress; // Get scroll progress (0 to 1)
-          action.time = action.getClip().duration * progress; // Map progress to animation time
+          const progress = self.progress;
+          action.time = action.getClip().duration * progress;
         },
       });
     }
   }, [actions, names]);
 
-  return <primitive object={scene} ref={ref} />;
+  const handlePointerMove = (event) => {
+    event.stopPropagation();
+
+    // Convert click position to normalized device coordinates
+    mouse.current.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.current.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    // Perform raycasting
+    raycaster.current.setFromCamera(mouse.current, camera);
+    const intersects = raycaster.current.intersectObject(scene, true);
+
+    if (intersects.length > 0) {
+      const clickedMesh = intersects[0].object;
+      console.log(clickedMesh);
+      console.log(`Clicked on: ${clickedMesh.name}`);
+    }
+  };
+
+  return (
+    <primitive object={scene} ref={ref} onPointerMove={handlePointerMove} />
+  );
 }
 
 export default function App() {
@@ -88,12 +115,23 @@ export default function App() {
   //   // thickness_map: true,
   // });
 
+  const [clicked, setClicked] = useState(false);
   const autoRotateRef = useRef(true);
   const [autoRotateState, setAutoRotateState] = useState(true);
+  const css2DSceneRef = useRef(new THREE.Scene()); // Add scene reference
 
   const timeOutRef = useRef(null);
 
   const config = { size: 12.5, focus: 0.0, samples: 10 };
+
+  const hotspotPos = [
+    { x: 0.065203, y: -0.012599, z: 0.455502 },
+    { x: 0.04, y: -0.015138, z: 0.393335 },
+    { x: 0.04, y: -0.021696, z: 0.345634 },
+    { x: 0.082205, y: -0.021696, z: 0.289858 },
+    { x: 0.07398, y: -0.021696, z: -0.093429 },
+    { x: 0.066513, y: -0.021696, z: -0.265673 },
+  ];
 
   function bindEventsToSameHandler(element, events, handler) {
     for (var i = 0; i < events.length; i++) {
@@ -102,6 +140,7 @@ export default function App() {
   }
 
   function handler() {
+    setClicked((clicked) => !clicked);
     setAutoRotateState(false);
     clearTimeout(timeOutRef.current);
     timeOutRef.current = setTimeout(() => {
@@ -122,71 +161,78 @@ export default function App() {
   }, []);
 
   return (
-    <Canvas
-      id="canvas_container"
-      shadows
-      className="canvas"
-      camera={{ position: [0.6, 0.3, 0.6], fov: 35 }}
-    >
-      <Environment
-        files="/hdri/royal_esplanade_1k.hdr"
-        //background
-        // backgroundBlurriness={0.5}
-      />
-      <SoftShadows {...config} />
-      <ambientLight intensity={Math.PI / 2} />
-      <directionalLight
-        castShadow
-        position={[-0.325, 0.55, 0.37]}
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
-        shadow-camera-left={-0.5}
-        shadow-camera-right={0.5}
-        shadow-camera-top={0.5}
-        shadow-camera-bottom={-0.5}
-      />
-      <spotLight
-        position={[10, 10, 10]}
-        angle={0.15}
-        penumbra={1}
-        decay={0}
-        intensity={Math.PI}
-      />
-      <pointLight position={[-10, -10, -10]} decay={0} intensity={Math.PI} />
-
-      <XVRModel />
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.13, 0]}>
-        <planeGeometry args={[100, 100]} />
-        <MeshReflectorMaterial
-          //
-          blur={[400, 100]}
-          resolution={1024}
-          mixBlur={1}
-          mixStrength={15}
-          depthScale={1}
-          minDepthThreshold={0.1}
-          depthToBlurRatioBias={1}
-          distortion={1}
-          //maxDepthThreshold={2}
-          color="#949494" //#151515 //#2B2B2B
-          metalness={0}
-          roughness={1}
-        />
-      </mesh>
-      <mesh
-        rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, -0.12, 0]}
-        receiveShadow
+    <>
+      <Canvas
+        id="canvas_container"
+        shadows
+        className="canvas"
+        camera={{ position: [0.6, 0.3, 0.6], fov: 35 }}
       >
-        <planeGeometry args={[30, 30]} />
-        <shadowMaterial transparent opacity={0.4} />
-      </mesh>
+        <Environment
+          files="/hdri/royal_esplanade_1k.hdr"
+          //background
+          // backgroundBlurriness={0.5}
+        />
+        <SoftShadows {...config} />
+        <ambientLight intensity={Math.PI / 2} />
+        <directionalLight
+          castShadow
+          position={[-0.325, 0.55, 0.37]}
+          shadow-mapSize-width={1024}
+          shadow-mapSize-height={1024}
+          shadow-camera-left={-0.5}
+          shadow-camera-right={0.5}
+          shadow-camera-top={0.5}
+          shadow-camera-bottom={-0.5}
+        />
+        <spotLight
+          position={[10, 10, 10]}
+          angle={0.15}
+          penumbra={1}
+          decay={0}
+          intensity={Math.PI}
+        />
+        <pointLight position={[-10, -10, -10]} decay={0} intensity={Math.PI} />
 
-      <OrbitControls enableZoom={false} autoRotate={autoRotateState} />
-      <Stats />
-    </Canvas>
+        <XVRModel />
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.13, 0]}>
+          <planeGeometry args={[100, 100]} />
+          <MeshReflectorMaterial
+            //
+            blur={[400, 100]}
+            resolution={1024}
+            mixBlur={1}
+            mixStrength={15}
+            depthScale={1}
+            minDepthThreshold={0.1}
+            depthToBlurRatioBias={1}
+            distortion={1}
+            //maxDepthThreshold={2}
+            color="#949494" //#151515 //#2B2B2B
+            metalness={0}
+            roughness={1}
+          />
+        </mesh>
+        <mesh
+          rotation={[-Math.PI / 2, 0, 0]}
+          position={[0, -0.12, 0]}
+          receiveShadow
+        >
+          <planeGeometry args={[30, 30]} />
+          <shadowMaterial transparent opacity={0.4} />
+        </mesh>
+
+        <OrbitControls enableZoom={false} autoRotate={autoRotateState} />
+        <Stats />
+        {hotspotPos.map((pos, index) => (
+          <Hotspot
+            key={index}
+            className="hotspot_container"
+            clicked={clicked}
+            position={[pos.x, pos.y, pos.z]} // Three.js expects an array for positions
+          />
+        ))}
+      </Canvas>
+    </>
   );
 }
-
-// Ensure that createRoot is only called once at the top level
-createRoot(document.getElementById("root")).render(<App />);
