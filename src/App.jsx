@@ -56,11 +56,13 @@ function XVRModel(props) {
   const parentObjectRef = useRef(null);
   const prevHovered = useRef(null);
   const currentHovered = useRef(null);
+  const currentPartsPositionRef = useRef([]);
 
   useEffect(() => {
     scene.traverse((child) => {
       if (child.name == "parent") {
         parentObjectRef.current = child;
+        props.setParentObject(parentObjectRef.current);
       }
       if (child.isMesh) {
         child.castShadow = true;
@@ -160,19 +162,47 @@ export default function App() {
   const [autoRotateState, setAutoRotateState] = useState(true);
   const css2DSceneRef = useRef(new THREE.Scene()); // Add scene reference
   const [currentHovered, setCurrentHovered] = useState(null);
+  const parentObjectRef = useRef(null);
+  const currentPartsPositionRef = useRef([]);
 
   const timeOutRef = useRef(null);
 
   const config = { size: 12.5, focus: 0.0, samples: 10 };
 
-  const hotspotPos = [
-    { name: "Front", x: 0.065203, y: -0.012599, z: 0.455502 },
-    { name: "Front_2", x: 0.04, y: -0.015138, z: 0.393335 },
-    { name: "Front_3", x: 0.04, y: -0.021696, z: 0.345634 },
-    { name: "Front_1", x: 0.082205, y: -0.021696, z: 0.289858 },
-    { name: "Back_4", x: 0.07398, y: -0.021696, z: -0.093429 },
-    { name: "Back_7", x: 0.066513, y: -0.021696, z: -0.265673 },
+  const hotspotDetails = [
+    {
+      name: "frontal_screen",
+      details: "Front Glass",
+      pos: { x: 0.065203, y: -0.012599, z: 0.455502 },
+    },
+    {
+      name: "cumpute_components",
+      details: "Compute Core",
+      pos: { x: 0.04, y: -0.015138, z: 0.393335 },
+    },
+    {
+      name: "lenses",
+      details: "Lenses",
+      pos: { x: 0.04, y: -0.021696, z: 0.345634 },
+    },
+    {
+      name: "body",
+      details: "Body",
+      pos: { x: 0.082205, y: -0.021696, z: 0.289858 },
+    },
+    {
+      name: "fabric",
+      details: "Head Cousion",
+      pos: { x: 0.07398, y: -0.021696, z: -0.093429 },
+    },
+    {
+      name: "battery",
+      details: "Battery",
+      pos: { x: 0.066513, y: -0.021696, z: -0.265673 },
+    },
   ];
+
+  currentPartsPositionRef.current = hotspotDetails;
 
   function bindEventsToSameHandler(element, events, handler) {
     for (var i = 0; i < events.length; i++) {
@@ -203,6 +233,10 @@ export default function App() {
 
   const setCurrentHoveredObject = (object) => {
     setCurrentHovered(object);
+  };
+
+  const setParentObject = (object) => {
+    parentObjectRef.current = object;
   };
 
   return (
@@ -239,7 +273,10 @@ export default function App() {
         />
         <pointLight position={[-10, -10, -10]} decay={0} intensity={Math.PI} />
 
-        <XVRModel setCurrentHoveredObject={setCurrentHoveredObject} />
+        <XVRModel
+          setCurrentHoveredObject={setCurrentHoveredObject}
+          setParentObject={setParentObject}
+        />
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.13, 0]}>
           <planeGeometry args={[100, 100]} />
           <MeshReflectorMaterial
@@ -269,14 +306,16 @@ export default function App() {
 
         <OrbitControls enableZoom={false} autoRotate={autoRotateState} />
         <Stats />
-        {hotspotPos.map((pos, index) => (
+        {hotspotDetails.map((hotspot, index) => (
           <Hotspot
             key={index}
             className="hotspot_container"
             clicked={clicked}
-            position={[pos.x, pos.y, pos.z]} // Three.js expects an array for positions
-            name={pos.name}
+            position={[hotspot.pos.x, hotspot.pos.y, hotspot.pos.z]}
+            name={hotspot.name}
+            details={hotspot.details}
             currentHoveredPart={currentHovered}
+            parentObject={parentObjectRef.current}
           />
         ))}
       </Canvas>

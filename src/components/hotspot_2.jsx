@@ -21,6 +21,8 @@ export default function Hotspot(props) {
 
   const css2dObjectReadyRef = useRef(null);
   const currentHoveredPart = useRef(props.currentHoveredPart);
+  
+  
 
   css2dObjectReadyRef.current = new Promise((resolve, reject) => {
     if (css2dObjectRef.current == null) {
@@ -48,11 +50,11 @@ export default function Hotspot(props) {
 
           css2dObjectRef.current = new CSS2DObject(container_div);
 
-          css2dObjectRef.current.position.set(
-            props.position[0],
-            props.position[1],
-            props.position[2]
-          );
+          // css2dObjectRef.current.position.set(
+          //   props.position[0],
+          //   props.position[1],
+          //   props.position[2]
+          // );
           css2dObjectRef.current.center.set(0, 0);
           css2dObjectRef.current.rotation.set(0, (Math.PI / 180) * 214.48, 0);
           css2dObjectRef.current.scale.set(0.1, 0.1, 0.1);
@@ -60,6 +62,10 @@ export default function Hotspot(props) {
 
           setSvg_element(container_div.querySelector("#Layer_1"));
           setSvg_path(container_div.querySelector("#path"));
+
+          const hotspot_datails =
+            container_div.querySelector("#hotspot_datails");
+          hotspot_datails.innerHTML = props.details;
 
           resolve(); // Signal that the css2dObject is ready
         })
@@ -148,13 +154,12 @@ export default function Hotspot(props) {
       .catch((err) => console.error("Error loading hotspot:", err));
   }, []);
 
-  // useEffect(() => {
-  //   //console.log(props.clicked);
-  // }, [props.clicked]);
+  useEffect(() => {
+    console.log(props.parentObject);
+  }, [props.parentObject]);
 
   useEffect(() => {
     if (css2dObjectRef.current) {
-      console.log(props.currentHoveredPart.name, props.name);
       if (
         props.currentHoveredPart &&
         props.currentHoveredPart.name == props.name
@@ -166,6 +171,22 @@ export default function Hotspot(props) {
       }
     }
   }, [props.currentHoveredPart]);
+
+  useEffect(() => {
+    console.log("entered useeffect");
+    if (props.parentObject) {
+      const positionalEmpty = props.parentObject.getObjectByName(
+        props.name + "_empty"
+      );
+      if (css2dObjectRef.current)
+        css2dObjectRef.current.position.set(
+          positionalEmpty.position.x,
+          positionalEmpty.position.y,
+          positionalEmpty.position.z
+        );
+      console.log(props.name, positionalEmpty.position);
+    }
+  }, [props.parentObject]);
 
   useFrame(() => {
     if (
