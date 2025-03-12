@@ -20,6 +20,7 @@ export default function Hotspot(props) {
   const [svg_path, setSvg_path] = useState(null);
 
   const css2dObjectReadyRef = useRef(null);
+  const currentHoveredPart = useRef(props.currentHoveredPart);
 
   css2dObjectReadyRef.current = new Promise((resolve, reject) => {
     if (css2dObjectRef.current == null) {
@@ -46,6 +47,7 @@ export default function Hotspot(props) {
           const position = [0.2, 0, 0];
 
           css2dObjectRef.current = new CSS2DObject(container_div);
+
           css2dObjectRef.current.position.set(
             props.position[0],
             props.position[1],
@@ -54,6 +56,7 @@ export default function Hotspot(props) {
           css2dObjectRef.current.center.set(0, 0);
           css2dObjectRef.current.rotation.set(0, (Math.PI / 180) * 214.48, 0);
           css2dObjectRef.current.scale.set(0.1, 0.1, 0.1);
+          css2dObjectRef.current.visible = false;
 
           setSvg_element(container_div.querySelector("#Layer_1"));
           setSvg_path(container_div.querySelector("#path"));
@@ -140,15 +143,29 @@ export default function Hotspot(props) {
       .then(() => {
         //console.log("2dObject ready");
         css2DSceneRef.current.add(css2dObjectRef.current);
-        animate_line(); // This runs once when the component mounts
+        //animate_line(); // This runs once when the component mounts
       })
       .catch((err) => console.error("Error loading hotspot:", err));
   }, []);
 
+  // useEffect(() => {
+  //   //console.log(props.clicked);
+  // }, [props.clicked]);
+
   useEffect(() => {
-    //console.log(props.clicked);
-    animate_line();
-  }, [props.clicked]);
+    if (css2dObjectRef.current) {
+      console.log(props.currentHoveredPart.name, props.name);
+      if (
+        props.currentHoveredPart &&
+        props.currentHoveredPart.name == props.name
+      ) {
+        css2dObjectRef.current.visible = true;
+        animate_line();
+      } else {
+        css2dObjectRef.current.visible = false;
+      }
+    }
+  }, [props.currentHoveredPart]);
 
   useFrame(() => {
     if (

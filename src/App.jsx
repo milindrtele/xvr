@@ -53,9 +53,15 @@ function XVRModel(props) {
   const { ref, actions, names, mixer } = useAnimations(animations, group);
   const raycaster = useRef(new THREE.Raycaster());
   const mouse = useRef(new THREE.Vector2());
+  const parentObjectRef = useRef(null);
+  const prevHovered = useRef(null);
+  const currentHovered = useRef(null);
 
   useEffect(() => {
     scene.traverse((child) => {
+      if (child.name == "parent") {
+        parentObjectRef.current = child;
+      }
       if (child.isMesh) {
         child.castShadow = true;
         child.receiveShadow = true;
@@ -82,26 +88,60 @@ function XVRModel(props) {
     }
   }, [actions, names]);
 
-  const handlePointerMove = (event) => {
+  const handlePointerOver = (event) => {
     event.stopPropagation();
 
-    // Convert click position to normalized device coordinates
+    // Convert pointer position to normalized device coordinates
     mouse.current.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.current.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
     // Perform raycasting
     raycaster.current.setFromCamera(mouse.current, camera);
-    const intersects = raycaster.current.intersectObject(scene, true);
+    const intersects = raycaster.current.intersectObject(
+      parentObjectRef.current,
+      true
+    );
 
+    // Reset previous hovered object's emissive color
+    if (prevHovered.current && prevHovered.current !== intersects[0]?.object) {
+      prevHovered.current.material.emissive.set(0x000000);
+      //prevHovered.current = null;
+    }
+
+    // If there is a new intersected object, change its emissive color
     if (intersects.length > 0) {
-      const clickedMesh = intersects[0].object;
-      console.log(clickedMesh);
-      console.log(`Clicked on: ${clickedMesh.name}`);
+      currentHovered.current = intersects[0].object;
+      props.setCurrentHoveredObject(intersects[0].object);
+      if (
+        prevHovered.current &&
+        currentHovered.current.name != prevHovered.current.name
+      ) {
+        prevHovered.current.material.emissive.set(0x000000);
+      }
+      if (
+        currentHovered.current.material &&
+        currentHovered.current.material.emissive !== undefined
+      ) {
+        currentHovered.current.material.emissive.set(0x0000ff); // Blue color
+        prevHovered.current = currentHovered.current;
+      }
+    } else {
+      prevHovered.current.material.emissive.set(0x000000);
     }
   };
 
+  const handlePointerOut = () => {
+    if (prevHovered.current)
+      prevHovered.current.material.emissive.set(0x000000);
+  };
+
   return (
-    <primitive object={scene} ref={ref} onPointerMove={handlePointerMove} />
+    <primitive
+      object={scene}
+      ref={ref}
+      onPointerOver={handlePointerOver}
+      onPointerOut={handlePointerOut}
+    />
   );
 }
 
@@ -119,18 +159,19 @@ export default function App() {
   const autoRotateRef = useRef(true);
   const [autoRotateState, setAutoRotateState] = useState(true);
   const css2DSceneRef = useRef(new THREE.Scene()); // Add scene reference
+  const [currentHovered, setCurrentHovered] = useState(null);
 
   const timeOutRef = useRef(null);
 
   const config = { size: 12.5, focus: 0.0, samples: 10 };
 
   const hotspotPos = [
-    { x: 0.065203, y: -0.012599, z: 0.455502 },
-    { x: 0.04, y: -0.015138, z: 0.393335 },
-    { x: 0.04, y: -0.021696, z: 0.345634 },
-    { x: 0.082205, y: -0.021696, z: 0.289858 },
-    { x: 0.07398, y: -0.021696, z: -0.093429 },
-    { x: 0.066513, y: -0.021696, z: -0.265673 },
+    { name: "Front", x: 0.065203, y: -0.012599, z: 0.455502 },
+    { name: "Front_2", x: 0.04, y: -0.015138, z: 0.393335 },
+    { name: "Front_3", x: 0.04, y: -0.021696, z: 0.345634 },
+    { name: "Front_1", x: 0.082205, y: -0.021696, z: 0.289858 },
+    { name: "Back_4", x: 0.07398, y: -0.021696, z: -0.093429 },
+    { name: "Back_7", x: 0.066513, y: -0.021696, z: -0.265673 },
   ];
 
   function bindEventsToSameHandler(element, events, handler) {
@@ -159,6 +200,10 @@ export default function App() {
       events.forEach((event) => element.removeEventListener(event, handler));
     };
   }, []);
+
+  const setCurrentHoveredObject = (object) => {
+    setCurrentHovered(object);
+  };
 
   return (
     <>
@@ -194,7 +239,7 @@ export default function App() {
         />
         <pointLight position={[-10, -10, -10]} decay={0} intensity={Math.PI} />
 
-        <XVRModel />
+        <XVRModel setCurrentHoveredObject={setCurrentHoveredObject} />
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.13, 0]}>
           <planeGeometry args={[100, 100]} />
           <MeshReflectorMaterial
@@ -230,6 +275,8 @@ export default function App() {
             className="hotspot_container"
             clicked={clicked}
             position={[pos.x, pos.y, pos.z]} // Three.js expects an array for positions
+            name={pos.name}
+            currentHoveredPart={currentHovered}
           />
         ))}
       </Canvas>
