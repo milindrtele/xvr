@@ -21,8 +21,6 @@ export default function Hotspot(props) {
 
   const css2dObjectReadyRef = useRef(null);
   const currentHoveredPart = useRef(props.currentHoveredPart);
-  
-  
 
   css2dObjectReadyRef.current = new Promise((resolve, reject) => {
     if (css2dObjectRef.current == null) {
@@ -164,12 +162,24 @@ export default function Hotspot(props) {
         props.currentHoveredPart &&
         props.currentHoveredPart.name == props.name
       ) {
+        const hotspot = props.allPartsPositionsRef.find(
+          (h) => h.name === props.name
+        );
+
+        css2dObjectRef.current.position.set(
+          hotspot.position.x,
+          hotspot.position.y,
+          hotspot.position.z
+        );
         css2dObjectRef.current.visible = true;
         animate_line();
       } else {
         css2dObjectRef.current.visible = false;
       }
     }
+
+    // console.log(props.name);
+    // console.log(hotspot.position);
   }, [props.currentHoveredPart]);
 
   useEffect(() => {

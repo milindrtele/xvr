@@ -48,15 +48,40 @@ function XVRModel(props) {
   const group = useRef();
   const { camera } = useThree();
   const { scene, animations } = useGLTF(
-    "/models/VR Prototype Baked with anchors.glb"
+    "/models/VR Prototype Baked with anchors_2.glb"
   );
   const { ref, actions, names, mixer } = useAnimations(animations, group);
   const raycaster = useRef(new THREE.Raycaster());
   const mouse = useRef(new THREE.Vector2());
   const parentObjectRef = useRef(null);
+
   const prevHovered = useRef(null);
   const currentHovered = useRef(null);
   const currentPartsPositionRef = useRef([]);
+  //const allPartsPositionsRef = [];
+
+  function updateHotspotPosition(name, newPos) {
+    const foundIndex = props.allPartsPositionsRef.findIndex(
+      (h) => h.name === name
+    );
+
+    if (foundIndex !== -1) {
+      // Updating existing hotspot
+      props.allPartsPositionsRef[foundIndex] = {
+        ...props.allPartsPositionsRef[foundIndex],
+        position: { ...newPos }, // Ensure immutability
+      };
+    } else {
+      // Adding a new hotspot
+      console.log("Hotspot not found! Adding new hotspot.");
+      props.allPartsPositionsRef.push({ name: name, position: { ...newPos } });
+    }
+
+    const hotspot = props.allPartsPositionsRef.find(
+      (h) => h.name === "cumpute_components"
+    );
+    //if (hotspot) console.log(hotspot.position);
+  }
 
   useEffect(() => {
     scene.traverse((child) => {
@@ -81,10 +106,24 @@ function XVRModel(props) {
         end: "1000px",
         pin: true,
         scrub: 1,
-        markers: true,
+        // markers: true,
         onUpdate: (self) => {
+          props.setCurrentHoveredObject(null);
           const progress = self.progress;
           action.time = action.getClip().duration * progress;
+
+          //updated positions of the parts on scroll update
+          parentObjectRef.current.children.forEach((part) => {
+            if (part.isMesh) {
+              const positions = {
+                x: part.position.x,
+                y: part.position.y,
+                z: part.position.z,
+              };
+
+              updateHotspotPosition(part.name, positions);
+            }
+          });
         },
       });
     }
@@ -104,31 +143,25 @@ function XVRModel(props) {
       true
     );
 
-    // Reset previous hovered object's emissive color
+    // Reset the previous hovered object's emissive color if it exists and is different from the new one
     if (prevHovered.current && prevHovered.current !== intersects[0]?.object) {
-      prevHovered.current.material.emissive.set(0x000000);
-      //prevHovered.current = null;
-    }
-
-    // If there is a new intersected object, change its emissive color
-    if (intersects.length > 0) {
-      currentHovered.current = intersects[0].object;
-      props.setCurrentHoveredObject(intersects[0].object);
       if (
-        prevHovered.current &&
-        currentHovered.current.name != prevHovered.current.name
+        prevHovered.current.material &&
+        prevHovered.current.material.emissive
       ) {
         prevHovered.current.material.emissive.set(0x000000);
       }
-      if (
-        currentHovered.current.material &&
-        currentHovered.current.material.emissive !== undefined
-      ) {
-        currentHovered.current.material.emissive.set(0x0000ff); // Blue color
-        prevHovered.current = currentHovered.current;
+      prevHovered.current = null;
+    }
+
+    if (intersects.length > 0) {
+      const hoveredObject = intersects[0].object;
+      props.setCurrentHoveredObject(hoveredObject);
+
+      if (hoveredObject.material && hoveredObject.material.emissive) {
+        hoveredObject.material.emissive.set(0x0000ff); // Blue color
+        prevHovered.current = hoveredObject;
       }
-    } else {
-      prevHovered.current.material.emissive.set(0x000000);
     }
   };
 
@@ -164,6 +197,7 @@ export default function App() {
   const [currentHovered, setCurrentHovered] = useState(null);
   const parentObjectRef = useRef(null);
   const currentPartsPositionRef = useRef([]);
+  const allPartsPositionsRef = useRef([]);
 
   const timeOutRef = useRef(null);
 
@@ -276,6 +310,7 @@ export default function App() {
         <XVRModel
           setCurrentHoveredObject={setCurrentHoveredObject}
           setParentObject={setParentObject}
+          allPartsPositionsRef={allPartsPositionsRef.current}
         />
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.13, 0]}>
           <planeGeometry args={[100, 100]} />
@@ -316,6 +351,7 @@ export default function App() {
             details={hotspot.details}
             currentHoveredPart={currentHovered}
             parentObject={parentObjectRef.current}
+            allPartsPositionsRef={allPartsPositionsRef.current}
           />
         ))}
       </Canvas>
