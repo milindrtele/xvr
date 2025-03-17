@@ -198,6 +198,20 @@ export default function Hotspot(props) {
     }
   }, [props.parentObject]);
 
+  useEffect(() => {
+    const handleResize = () => {
+      if (css2dRendererRef.current) {
+        css2dRendererRef.current.setSize(window.innerWidth, window.innerHeight);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   useFrame(() => {
     if (
       css2dRendererRef.current &&

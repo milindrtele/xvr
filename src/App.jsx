@@ -1,9 +1,10 @@
 import { createRoot } from "react-dom/client";
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useLayoutEffect } from "react";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import "./styles.css";
 
+import Loading from "./components/loading_screen.jsx";
 import Hotspot from "./components/hotspot_2.jsx";
 
 import {
@@ -18,6 +19,7 @@ import {
 //import { useControls } from "leva";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { ScrollToPlugin } from "gsap/dist/ScrollToPlugin";
 
 // function XVRModel(props) {
 //   const group = useRef();
@@ -42,7 +44,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 //   return <primitive object={scene} />;
 // }
 
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
 function XVRModel(props) {
   const group = useRef();
@@ -58,7 +60,34 @@ function XVRModel(props) {
   const prevHovered = useRef(null);
   const currentHovered = useRef(null);
   const currentPartsPositionRef = useRef([]);
+  const isTouchDeviceRef = useRef(null);
+  const scrollTriggerRef = useRef(null);
   //const allPartsPositionsRef = [];
+
+  function animateToProgress(targetProgress) {
+    return new Promise((resolve, reject) => {
+      // Get the total scrollable distance
+      const totalScroll = 1000; //ScrollTrigger.maxScroll(window);
+
+      // Calculate the scroll position based on the target progress
+      const targetScroll = totalScroll * targetProgress;
+
+      // Use gsap to animate the scroll position smoothly
+      gsap.to(window, {
+        scrollTo: targetScroll,
+        //duration: 3, // Adjust the duration for smoothness
+        //ease: "power2.inOut", // You can change the easing for different effects
+        onUpdate: () => {
+          if (scrollTriggerRef.current != null) {
+            scrollTriggerRef.current.refresh(); // Refresh ScrollTrigger on update to ensure correct behavior
+          }
+        },
+        onComplete: () => {
+          resolve();
+        },
+      });
+    });
+  }
 
   function updateHotspotPosition(name, newPos) {
     const foundIndex = props.allPartsPositionsRef.findIndex(
@@ -100,10 +129,10 @@ function XVRModel(props) {
       action.play();
       action.paused = true;
 
-      ScrollTrigger.create({
+      scrollTriggerRef.current = ScrollTrigger.create({
         trigger: "#canvas_container",
         start: "top",
-        end: "1000px",
+        end: "1000",
         pin: true,
         scrub: 1,
         // markers: true,
@@ -120,7 +149,6 @@ function XVRModel(props) {
                 y: part.position.y,
                 z: part.position.z,
               };
-
               updateHotspotPosition(part.name, positions);
             }
           });
@@ -128,6 +156,20 @@ function XVRModel(props) {
       });
     }
   }, [actions, names]);
+
+  useEffect(() => {
+    if (scene) {
+      props.setLoadingState();
+    }
+  }, [scene]);
+
+  useEffect(() => {
+    isTouchDeviceRef.current = props.isTouchDevice;
+  }, [props.isTouchDevice]);
+
+  useEffect(() => {
+    animateToProgress(props.sliderProgress / 100);
+  }, [props.sliderProgress]);
 
   const handlePointerOver = (event) => {
     event.stopPropagation();
@@ -159,7 +201,7 @@ function XVRModel(props) {
       props.setCurrentHoveredObject(hoveredObject);
 
       if (hoveredObject.material && hoveredObject.material.emissive) {
-        hoveredObject.material.emissive.set(0x0000ff); // Blue color
+        hoveredObject.material.emissive.set(0x696868); // Blue color
         prevHovered.current = hoveredObject;
       }
     }
@@ -171,12 +213,21 @@ function XVRModel(props) {
   };
 
   return (
-    <primitive
-      object={scene}
-      ref={ref}
-      onPointerOver={handlePointerOver}
-      onPointerOut={handlePointerOut}
-    />
+    <>
+      <primitive
+        object={scene}
+        ref={ref}
+        {...(isTouchDeviceRef.current
+          ? {
+              onPointerDown: handlePointerOver,
+              onPointerUp: handlePointerOut,
+            }
+          : {
+              onPointerOver: handlePointerOver,
+              onPointerOut: handlePointerOut,
+            })}
+      />
+    </>
   );
 }
 
@@ -198,6 +249,10 @@ export default function App() {
   const parentObjectRef = useRef(null);
   const currentPartsPositionRef = useRef([]);
   const allPartsPositionsRef = useRef([]);
+  const [loading, setLoading] = useState(true);
+  const isTouchDeviceRef = useRef(false);
+  const [sliderProgress, setSliderProgress] = useState(0);
+  const [orientation, setOrientation] = useState("landscape");
 
   const timeOutRef = useRef(null);
 
@@ -265,6 +320,24 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    if ("ontouchstart" in document.documentElement) {
+      console.log("touch");
+      isTouchDeviceRef.current = true;
+    } else {
+      console.log("coursor");
+      isTouchDeviceRef.current = false;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (window.innerWidth <= window.innerHeight) {
+      setOrientation("portrait");
+    } else {
+      setOrientation("landscape");
+    }
+  }, []);
+
   const setCurrentHoveredObject = (object) => {
     setCurrentHovered(object);
   };
@@ -273,13 +346,20 @@ export default function App() {
     parentObjectRef.current = object;
   };
 
+  const setLoadingState = () => {
+    setLoading(false);
+  };
+
   return (
     <>
       <Canvas
         id="canvas_container"
         shadows
         className="canvas"
-        camera={{ position: [0.6, 0.3, 0.6], fov: 35 }}
+        camera={{
+          position: [0.6, 0.3, 0.6],
+          fov: orientation === "portrait" ? 75 : 35,
+        }}
       >
         <Environment
           files="/hdri/royal_esplanade_1k.hdr"
@@ -311,6 +391,9 @@ export default function App() {
           setCurrentHoveredObject={setCurrentHoveredObject}
           setParentObject={setParentObject}
           allPartsPositionsRef={allPartsPositionsRef.current}
+          setLoadingState={setLoadingState}
+          isTouchDevice={isTouchDeviceRef.current}
+          sliderProgress={sliderProgress}
         />
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.13, 0]}>
           <planeGeometry args={[100, 100]} />
@@ -341,20 +424,39 @@ export default function App() {
 
         <OrbitControls enableZoom={false} autoRotate={autoRotateState} />
         <Stats />
-        {hotspotDetails.map((hotspot, index) => (
-          <Hotspot
-            key={index}
-            className="hotspot_container"
-            clicked={clicked}
-            position={[hotspot.pos.x, hotspot.pos.y, hotspot.pos.z]}
-            name={hotspot.name}
-            details={hotspot.details}
-            currentHoveredPart={currentHovered}
-            parentObject={parentObjectRef.current}
-            allPartsPositionsRef={allPartsPositionsRef.current}
-          />
-        ))}
+        {loading
+          ? null
+          : hotspotDetails.map((hotspot, index) => (
+              <Hotspot
+                key={index}
+                className="hotspot_container"
+                clicked={clicked}
+                position={[hotspot.pos.x, hotspot.pos.y, hotspot.pos.z]}
+                name={hotspot.name}
+                details={hotspot.details}
+                currentHoveredPart={currentHovered}
+                parentObject={parentObjectRef.current}
+                allPartsPositionsRef={allPartsPositionsRef.current}
+              />
+            ))}
       </Canvas>
+      {isTouchDeviceRef.current ? (
+        <div className="slidecontainer">
+          <input
+            type="range"
+            min="1"
+            max="100"
+            value={sliderProgress}
+            className="slider"
+            id="myRange"
+            onChange={(e) => {
+              setSliderProgress(e.target.value);
+            }}
+          ></input>
+        </div>
+      ) : null}
+
+      {loading ? <Loading /> : null}
     </>
   );
 }
