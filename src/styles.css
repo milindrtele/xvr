@@ -7,6 +7,19 @@ Canvas {
   height: 100vh;
 }
 
+html {
+  overflow: scroll;
+  overflow-x: hidden;
+}
+::-webkit-scrollbar {
+  width: 0; /* Remove scrollbar space */
+  background: transparent; /* Optional: just make scrollbar invisible */
+}
+/* Optional: show position indicator in red */
+::-webkit-scrollbar-thumb {
+  background: #ff0000;
+}
+
 .hotspot_container {
   position: relative;
   transform: translate(0, -100%);
@@ -26,7 +39,7 @@ Canvas {
   transform: translate(0, -40%);
   /* border: solid; */
   /* border-color: #00aeef; */
-  background-color: #00aeef;
+  background-color: #00afef;
   /* border-width: 2px; */
   /* border-radius: 10px; */
   /* margin: 0 10%; */
@@ -162,6 +175,7 @@ Canvas {
   opacity: 0.7;
   -webkit-transition: 0.2s;
   transition: opacity 0.2s;
+  border-radius: 25px;
 }
 
 .slider:hover {
@@ -173,13 +187,76 @@ Canvas {
   appearance: none;
   width: 25px;
   height: 25px;
-  background: #04aa6d;
+  border-radius: 25px;
+  background: #00aeef;
   cursor: pointer;
 }
 
 .slider::-moz-range-thumb {
   width: 25px;
   height: 25px;
-  background: #04aa6d;
+  background: #00aeef;
   cursor: pointer;
+}
+
+.overlays {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+}
+
+.metavian {
+  position: absolute;
+  right: 1%;
+  bottom: 0;
+  width: max-content;
+  height: max-content;
+  display: flex;
+  flex-direction: row;
+}
+
+.metavian_logo {
+  width: 5vw;
+  height: 1vw;
+  margin: auto;
+  margin-left: 0.5vw;
+  margin-top: 8%;
+  background-image: url("../public/icons/268x52_Logo_Purple.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.powered_by_metavian {
+  font-size: 1vw;
+  text-wrap: nowrap;
+}
+
+@media (orientation: portrait) {
+  .svg_container {
+    width: 15vh;
+  }
+  .details_container {
+    width: 10vh;
+  }
+  .details_container p {
+    font-size: 1vh;
+  }
+  .metavian {
+    top: 1%;
+    right: 1%;
+  }
+
+  .metavian_logo {
+    width: 10vh;
+    height: 3vh;
+    margin-left: 3%;
+  }
+
+  .powered_by_metavian {
+    font-size: 2vh;
+  }
 }

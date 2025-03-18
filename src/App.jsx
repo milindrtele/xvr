@@ -4,7 +4,13 @@ import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import "./styles.css";
 
+import {
+  CSS2DRenderer,
+  CSS2DObject,
+} from "three/examples/jsm/renderers/CSS2DRenderer.js";
+
 import Loading from "./components/loading_screen.jsx";
+import Overlays from "./components/overlays.jsx";
 import Hotspot from "./components/hotspot_2.jsx";
 
 import {
@@ -21,36 +27,13 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ScrollToPlugin } from "gsap/dist/ScrollToPlugin";
 
-// function XVRModel(props) {
-//   const group = useRef();
-//   const { scene, animations } = useGLTF("/models/VRPrototypeBaked-v1.glb");
-//   // Extract animation actions
-//   console.log(animations);
-//   const { ref, actions, names } = useAnimations(animations);
-
-//   console.log(JSON.stringify(actions[names[0]]));
-//   animations[0].play();
-
-//   // const { scene } = useGLTF("/models/VRPrototypeBaked-v1.glb");
-//   // const { actions, mixer } = useAnimations(animations, group);
-
-//   scene.traverse((child) => {
-//     if (child.isMesh) {
-//       child.castShadow = true;
-//       child.receiveShadow = true;
-//     }
-//   });
-
-//   return <primitive object={scene} />;
-// }
-
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
 function XVRModel(props) {
   const group = useRef();
   const { camera } = useThree();
   const { scene, animations } = useGLTF(
-    "/models/VR Prototype Baked with anchors_2.glb"
+    "/models/VR Prototype Baked with anchors_3.glb"
   );
   const { ref, actions, names, mixer } = useAnimations(animations, group);
   const raycaster = useRef(new THREE.Raycaster());
@@ -62,6 +45,8 @@ function XVRModel(props) {
   const currentPartsPositionRef = useRef([]);
   const isTouchDeviceRef = useRef(null);
   const scrollTriggerRef = useRef(null);
+  const previousTimeRef = useRef(performance.now());
+  const fpsRef = useRef(0);
   //const allPartsPositionsRef = [];
 
   function animateToProgress(targetProgress) {
@@ -106,9 +91,9 @@ function XVRModel(props) {
       props.allPartsPositionsRef.push({ name: name, position: { ...newPos } });
     }
 
-    const hotspot = props.allPartsPositionsRef.find(
-      (h) => h.name === "cumpute_components"
-    );
+    // const hotspot = props.allPartsPositionsRef.find(
+    //   (h) => h.name === "cumpute_components"
+    // );
     //if (hotspot) console.log(hotspot.position);
   }
 
@@ -117,6 +102,9 @@ function XVRModel(props) {
       if (child.name == "parent") {
         parentObjectRef.current = child;
         props.setParentObject(parentObjectRef.current);
+      }
+      if (child.name == "dome") {
+        child.material.side = THREE.FrontSide;
       }
       if (child.isMesh) {
         child.castShadow = true;
@@ -170,6 +158,29 @@ function XVRModel(props) {
   useEffect(() => {
     animateToProgress(props.sliderProgress / 100);
   }, [props.sliderProgress]);
+
+  useEffect(() => {
+    props.cameraRef.current = camera; // Store the reference
+  }, [camera, props]);
+
+  useFrame(() => {
+    if (props.css2DRendererRef && props.css2DSceneRef && camera) {
+      props.css2DRendererRef.render(props.css2DSceneRef, camera);
+    }
+    // Calculate FPS
+    const currentTime = performance.now();
+    const deltaTime = (currentTime - previousTimeRef.current) / 1000; // Convert ms to seconds
+    previousTimeRef.current = currentTime;
+
+    if (deltaTime > 0) {
+      fpsRef.current = Math.round(1 / deltaTime);
+      if (fpsRef.current <= 30) {
+        props.enableGroundReflectorRef.current = false;
+      } else {
+        props.enableGroundReflectorRef.current = true;
+      }
+    }
+  });
 
   const handlePointerOver = (event) => {
     event.stopPropagation();
@@ -253,6 +264,11 @@ export default function App() {
   const isTouchDeviceRef = useRef(false);
   const [sliderProgress, setSliderProgress] = useState(0);
   const [orientation, setOrientation] = useState("landscape");
+  const cameraRef = useRef(null);
+  const enableGroundReflectorRef = useRef(false);
+
+  //2D renderer
+  const css2dRendererRef = useRef(null);
 
   const timeOutRef = useRef(null);
 
@@ -322,10 +338,8 @@ export default function App() {
 
   useEffect(() => {
     if ("ontouchstart" in document.documentElement) {
-      console.log("touch");
       isTouchDeviceRef.current = true;
     } else {
-      console.log("coursor");
       isTouchDeviceRef.current = false;
     }
   }, []);
@@ -336,6 +350,21 @@ export default function App() {
     } else {
       setOrientation("landscape");
     }
+  }, []);
+
+  useEffect(() => {
+    css2dRendererRef.current = new CSS2DRenderer();
+    css2dRendererRef.current.setSize(window.innerWidth, window.innerHeight);
+    css2dRendererRef.current.domElement.style.position = "fixed";
+    css2dRendererRef.current.domElement.style.top = "0";
+    css2dRendererRef.current.domElement.style.pointerEvents = "none";
+    document.body.appendChild(css2dRendererRef.current.domElement);
+
+    //addToScene();
+
+    return () => {
+      document.body.removeChild(css2dRendererRef.current.domElement);
+    };
   }, []);
 
   const setCurrentHoveredObject = (object) => {
@@ -354,7 +383,7 @@ export default function App() {
     <>
       <Canvas
         id="canvas_container"
-        shadows
+        shadows={enableGroundReflectorRef.current ? true : false}
         className="canvas"
         camera={{
           position: [0.6, 0.3, 0.6],
@@ -366,7 +395,7 @@ export default function App() {
           //background
           // backgroundBlurriness={0.5}
         />
-        <SoftShadows {...config} />
+        {enableGroundReflectorRef.current ? <SoftShadows {...config} /> : null}
         <ambientLight intensity={Math.PI / 2} />
         <directionalLight
           castShadow
@@ -388,30 +417,38 @@ export default function App() {
         <pointLight position={[-10, -10, -10]} decay={0} intensity={Math.PI} />
 
         <XVRModel
+          cameraRef={cameraRef}
+          css2DRendererRef={css2dRendererRef.current}
+          css2DSceneRef={css2DSceneRef.current}
           setCurrentHoveredObject={setCurrentHoveredObject}
           setParentObject={setParentObject}
           allPartsPositionsRef={allPartsPositionsRef.current}
           setLoadingState={setLoadingState}
           isTouchDevice={isTouchDeviceRef.current}
           sliderProgress={sliderProgress}
+          enableGroundReflectorRef={enableGroundReflectorRef}
         />
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.13, 0]}>
           <planeGeometry args={[100, 100]} />
-          <MeshReflectorMaterial
-            //
-            blur={[400, 100]}
-            resolution={1024}
-            mixBlur={1}
-            mixStrength={15}
-            depthScale={1}
-            minDepthThreshold={0.1}
-            depthToBlurRatioBias={1}
-            distortion={1}
-            //maxDepthThreshold={2}
-            color="#949494" //#151515 //#2B2B2B
-            metalness={0}
-            roughness={1}
-          />
+          {enableGroundReflectorRef.current ? (
+            <MeshReflectorMaterial
+              //
+              blur={[400, 100]}
+              resolution={1024}
+              mixBlur={1}
+              mixStrength={15}
+              depthScale={1}
+              minDepthThreshold={0.1}
+              depthToBlurRatioBias={1}
+              distortion={1}
+              //maxDepthThreshold={2}
+              color="#6e6e6e" //#151515 //#2B2B2B
+              metalness={0}
+              roughness={1}
+            />
+          ) : (
+            <meshStandardMaterial color="#ffffff" />
+          )}
         </mesh>
         <mesh
           rotation={[-Math.PI / 2, 0, 0]}
@@ -422,7 +459,11 @@ export default function App() {
           <shadowMaterial transparent opacity={0.4} />
         </mesh>
 
-        <OrbitControls enableZoom={false} autoRotate={autoRotateState} />
+        <OrbitControls
+          enablePan={false}
+          enableZoom={false}
+          autoRotate={autoRotateState}
+        />
         <Stats />
         {loading
           ? null
@@ -437,6 +478,8 @@ export default function App() {
                 currentHoveredPart={currentHovered}
                 parentObject={parentObjectRef.current}
                 allPartsPositionsRef={allPartsPositionsRef.current}
+                css2dRenderer={css2dRendererRef.current}
+                css2DScene={css2DSceneRef.current}
               />
             ))}
       </Canvas>
@@ -456,7 +499,7 @@ export default function App() {
         </div>
       ) : null}
 
-      {loading ? <Loading /> : null}
+      {loading ? <Loading /> : <Overlays />}
     </>
   );
 }

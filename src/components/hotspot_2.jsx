@@ -10,9 +10,9 @@ import gsap from "gsap";
 // gsap.registerPlugin(DrawSVGPlugin);
 
 export default function Hotspot(props) {
-  const css2dRendererRef = useRef(null);
+  //const css2dRendererRef = useRef(null);
   const { camera } = useThree();
-  const css2DSceneRef = useRef(new THREE.Scene()); // Add scene reference
+  //const css2DSceneRef = useRef(new THREE.Scene()); // Add scene reference
   const cameraRef = useRef(camera); // Add camera reference
   const css2dObjectRef = useRef(null);
 
@@ -77,26 +77,26 @@ export default function Hotspot(props) {
   async function addToScene() {
     try {
       await css2dObjectReadyRef.current; // Wait until css2dObject is created
-      css2DSceneRef.current.add(css2dObjectRef.current);
+      props.css2DScene.add(css2dObjectRef.current);
     } catch (error) {
       console.error("Failed to add to scene:", error);
     }
   }
 
-  useEffect(() => {
-    css2dRendererRef.current = new CSS2DRenderer();
-    css2dRendererRef.current.setSize(window.innerWidth, window.innerHeight);
-    css2dRendererRef.current.domElement.style.position = "fixed";
-    css2dRendererRef.current.domElement.style.top = "0";
-    css2dRendererRef.current.domElement.style.pointerEvents = "none";
-    document.body.appendChild(css2dRendererRef.current.domElement);
+  // useEffect(() => {
+  //   css2dRendererRef.current = new CSS2DRenderer();
+  //   css2dRendererRef.current.setSize(window.innerWidth, window.innerHeight);
+  //   css2dRendererRef.current.domElement.style.position = "fixed";
+  //   css2dRendererRef.current.domElement.style.top = "0";
+  //   css2dRendererRef.current.domElement.style.pointerEvents = "none";
+  //   document.body.appendChild(css2dRendererRef.current.domElement);
 
-    //addToScene();
+  //   //addToScene();
 
-    return () => {
-      document.body.removeChild(css2dRendererRef.current.domElement);
-    };
-  }, []);
+  //   return () => {
+  //     document.body.removeChild(css2dRendererRef.current.domElement);
+  //   };
+  // }, []);
 
   let scrollObj1 = {
     pos: 0,
@@ -146,15 +146,15 @@ export default function Hotspot(props) {
     css2dObjectReadyRef.current
       .then(() => {
         //console.log("2dObject ready");
-        css2DSceneRef.current.add(css2dObjectRef.current);
+        props.css2DScene.add(css2dObjectRef.current);
         //animate_line(); // This runs once when the component mounts
       })
       .catch((err) => console.error("Error loading hotspot:", err));
   }, []);
 
-  useEffect(() => {
-    console.log(props.parentObject);
-  }, [props.parentObject]);
+  // useEffect(() => {
+  //   console.log(props.parentObject);
+  // }, [props.parentObject]);
 
   useEffect(() => {
     if (css2dObjectRef.current) {
@@ -183,7 +183,7 @@ export default function Hotspot(props) {
   }, [props.currentHoveredPart]);
 
   useEffect(() => {
-    console.log("entered useeffect");
+    //console.log("entered useeffect");
     if (props.parentObject) {
       const positionalEmpty = props.parentObject.getObjectByName(
         props.name + "_empty"
@@ -194,14 +194,14 @@ export default function Hotspot(props) {
           positionalEmpty.position.y,
           positionalEmpty.position.z
         );
-      console.log(props.name, positionalEmpty.position);
+      //console.log(props.name, positionalEmpty.position);
     }
   }, [props.parentObject]);
 
   useEffect(() => {
     const handleResize = () => {
-      if (css2dRendererRef.current) {
-        css2dRendererRef.current.setSize(window.innerWidth, window.innerHeight);
+      if (props.css2dRenderer) {
+        props.css2dRenderer.setSize(window.innerWidth, window.innerHeight);
       }
     };
 
@@ -212,15 +212,11 @@ export default function Hotspot(props) {
     };
   }, []);
 
-  useFrame(() => {
-    if (
-      css2dRendererRef.current &&
-      css2DSceneRef.current &&
-      cameraRef.current
-    ) {
-      css2dRendererRef.current.render(css2DSceneRef.current, cameraRef.current);
-    }
-  });
+  // useFrame(() => {
+  //   if (props.css2dRenderer && props.css2DScene && cameraRef.current) {
+  //     props.css2dRenderer.render(props.css2DScene, cameraRef.current);
+  //   }
+  // });
 
   return <></>;
 }
