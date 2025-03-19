@@ -25,8 +25,8 @@ export default function Hotspot(props) {
   css2dObjectReadyRef.current = new Promise((resolve, reject) => {
     if (css2dObjectRef.current == null) {
       const container_div = document.createElement("div");
-      container_div.style.width = "max-content";
-      container_div.style.height = "max-content";
+      container_div.style.width = "100dvw";
+      container_div.style.height = "100dvh";
       container_div.style.pointerEvents = "none";
       container_div.style.position = "fixed";
       container_div.style.zIndex = 0;
@@ -198,19 +198,19 @@ export default function Hotspot(props) {
     }
   }, [props.parentObject]);
 
-  useEffect(() => {
-    const handleResize = () => {
-      if (props.css2dRenderer) {
-        props.css2dRenderer.setSize(window.innerWidth, window.innerHeight);
-      }
-    };
+  // useEffect(() => {
+  //   const handleResize = () => {
+  //     if (props.css2dRenderer) {
+  //       props.css2dRenderer.setSize(window.innerWidth, window.innerHeight);
+  //     }
+  //   };
 
-    window.addEventListener("resize", handleResize);
+  //   window.addEventListener("resize", handleResize);
 
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
+  //   return () => {
+  //     window.removeEventListener("resize", handleResize);
+  //   };
+  // }, []);
 
   // useFrame(() => {
   //   if (props.css2dRenderer && props.css2DScene && cameraRef.current) {

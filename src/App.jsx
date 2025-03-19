@@ -47,6 +47,8 @@ function XVRModel(props) {
   const scrollTriggerRef = useRef(null);
   const previousTimeRef = useRef(performance.now());
   const fpsRef = useRef(0);
+  const avgFpsRef = useRef(0);
+  const isgraphicsLevelsetRef = useRef(false);
   //const allPartsPositionsRef = [];
 
   function animateToProgress(targetProgress) {
@@ -163,21 +165,52 @@ function XVRModel(props) {
     props.cameraRef.current = camera; // Store the reference
   }, [camera, props]);
 
+  let frameNo = 0;
+  let fpsArray = [];
+  let totalfps = 0;
+  let totalFramesToConsider = 30;
   useFrame(() => {
     if (props.css2DRendererRef && props.css2DSceneRef && camera) {
       props.css2DRendererRef.render(props.css2DSceneRef, camera);
     }
-    // Calculate FPS
-    const currentTime = performance.now();
-    const deltaTime = (currentTime - previousTimeRef.current) / 1000; // Convert ms to seconds
-    previousTimeRef.current = currentTime;
 
-    if (deltaTime > 0) {
-      fpsRef.current = Math.round(1 / deltaTime);
-      if (fpsRef.current <= 30) {
-        props.enableGroundReflectorRef.current = false;
+    console.log(isgraphicsLevelsetRef.current);
+    if (!isgraphicsLevelsetRef.current) {
+      console.log("entered g setup");
+      if (frameNo < totalFramesToConsider) {
+        frameNo++;
       } else {
-        props.enableGroundReflectorRef.current = true;
+        frameNo = 0;
+      }
+      if (!previousTimeRef.current) {
+        previousTimeRef.current = performance.now();
+      }
+      // Calculate FPS
+      const currentTime = performance.now();
+      const deltaTime = (currentTime - previousTimeRef.current) / 1000; // Convert ms to seconds
+      previousTimeRef.current = currentTime;
+
+      if (deltaTime > 0) {
+        fpsRef.current = Math.round(1 / deltaTime);
+        if (fpsArray.length < totalFramesToConsider) {
+          fpsArray.push(fpsRef.current);
+        }
+      }
+
+      if (fpsArray.length == totalFramesToConsider) {
+        totalfps = 0;
+        fpsArray.forEach((fpsNo) => {
+          totalfps = totalfps + fpsNo;
+        });
+        avgFpsRef.current = totalfps / totalFramesToConsider;
+        if (avgFpsRef.current <= 30) {
+          props.enableGroundReflectorRef(false);
+          isgraphicsLevelsetRef.current = true;
+        } else {
+          props.enableGroundReflectorRef(true);
+          isgraphicsLevelsetRef.current = true;
+        }
+        fpsArray.length = 0;
       }
     }
   });
@@ -212,7 +245,7 @@ function XVRModel(props) {
       props.setCurrentHoveredObject(hoveredObject);
 
       if (hoveredObject.material && hoveredObject.material.emissive) {
-        hoveredObject.material.emissive.set(0x696868); // Blue color
+        hoveredObject.material.emissive.set(0x696868); // color
         prevHovered.current = hoveredObject;
       }
     }
@@ -242,6 +275,37 @@ function XVRModel(props) {
   );
 }
 
+function ResizeHandler(props) {
+  const { gl, camera, setSize } = useThree();
+
+  useEffect(() => {
+    const handleResize = () => {
+      setSize({ width: window.innerWidth, height: window.innerHeight });
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      gl.setSize(window.innerWidth, window.innerHeight);
+      gl.setPixelRatio(window.devicePixelRatio);
+
+      if (props.css2DRendererRef?.current) {
+        props.css2DRendererRef.current.setSize(
+          window.innerWidth,
+          window.innerHeight
+        );
+        props.css2DRendererRef.current.domElement.style.top = "0";
+        props.css2DRendererRef.current.domElement.style.left = "0";
+        console.log(props.css2DRendererRef.current.domElement.style.width);
+      }
+    };
+
+    handleResize();
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [gl, camera, setSize, props.css2DRendererRef]);
+
+  return null;
+}
+
 export default function App() {
   // const { ...config } = useControls({
   //   size: { value: 15, min: 0, max: 50 },
@@ -266,6 +330,8 @@ export default function App() {
   const [orientation, setOrientation] = useState("landscape");
   const cameraRef = useRef(null);
   const enableGroundReflectorRef = useRef(false);
+  const [enableGroundReflector, setEnableGroundReflector] = useState(true);
+  const [hotspotDetailsState, setHotspotDetailsState] = useState(null);
 
   //2D renderer
   const css2dRendererRef = useRef(null);
@@ -307,7 +373,10 @@ export default function App() {
     },
   ];
 
-  currentPartsPositionRef.current = hotspotDetails;
+  useEffect(() => {
+    setHotspotDetailsState(hotspotDetails);
+    currentPartsPositionRef.current = hotspotDetails;
+  }, []);
 
   function bindEventsToSameHandler(element, events, handler) {
     for (var i = 0; i < events.length; i++) {
@@ -379,23 +448,28 @@ export default function App() {
     setLoading(false);
   };
 
+  const enableGroundReflectorF = (value) => {
+    setEnableGroundReflector(value);
+  };
+
   return (
     <>
       <Canvas
         id="canvas_container"
-        shadows={enableGroundReflectorRef.current ? true : false}
+        shadows={enableGroundReflector ? true : false}
         className="canvas"
         camera={{
           position: [0.6, 0.3, 0.6],
           fov: orientation === "portrait" ? 75 : 35,
         }}
       >
+        <ResizeHandler css2DRendererRef={css2dRendererRef} />
         <Environment
           files="/hdri/royal_esplanade_1k.hdr"
           //background
           // backgroundBlurriness={0.5}
         />
-        {enableGroundReflectorRef.current ? <SoftShadows {...config} /> : null}
+        {enableGroundReflector ? <SoftShadows {...config} /> : null}
         <ambientLight intensity={Math.PI / 2} />
         <directionalLight
           castShadow
@@ -426,11 +500,11 @@ export default function App() {
           setLoadingState={setLoadingState}
           isTouchDevice={isTouchDeviceRef.current}
           sliderProgress={sliderProgress}
-          enableGroundReflectorRef={enableGroundReflectorRef}
+          enableGroundReflectorRef={enableGroundReflectorF}
         />
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.13, 0]}>
           <planeGeometry args={[100, 100]} />
-          {enableGroundReflectorRef.current ? (
+          {enableGroundReflector ? (
             <MeshReflectorMaterial
               //
               blur={[400, 100]}
@@ -467,7 +541,7 @@ export default function App() {
         <Stats />
         {loading
           ? null
-          : hotspotDetails.map((hotspot, index) => (
+          : hotspotDetailsState.map((hotspot, index) => (
               <Hotspot
                 key={index}
                 className="hotspot_container"
@@ -483,23 +557,29 @@ export default function App() {
               />
             ))}
       </Canvas>
-      {isTouchDeviceRef.current ? (
-        <div className="slidecontainer">
-          <input
-            type="range"
-            min="1"
-            max="100"
-            value={sliderProgress}
-            className="slider"
-            id="myRange"
-            onChange={(e) => {
-              setSliderProgress(e.target.value);
-            }}
-          ></input>
-        </div>
-      ) : null}
 
-      {loading ? <Loading /> : <Overlays />}
+      {loading ? (
+        <Loading />
+      ) : (
+        <>
+          <Overlays />
+          {isTouchDeviceRef.current ? (
+            <div className="slidecontainer">
+              <input
+                type="range"
+                min="1"
+                max="100"
+                value={sliderProgress}
+                className="slider"
+                id="myRange"
+                onChange={(e) => {
+                  setSliderProgress(e.target.value);
+                }}
+              ></input>
+            </div>
+          ) : null}
+        </>
+      )}
     </>
   );
 }
