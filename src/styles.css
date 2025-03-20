@@ -1,5 +1,17 @@
+html {
+  overflow: scroll;
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
+  width: 100dvw;
+  height: 100dvh;
+  font-family: "Roboto", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-style: normal;
+  font-variation-settings: "wdth" 100;
 }
 
 Canvas {
@@ -7,10 +19,6 @@ Canvas {
   height: 100dvh;
 }
 
-html {
-  overflow: scroll;
-  overflow-x: hidden;
-}
 ::-webkit-scrollbar {
   width: 0; /* Remove scrollbar space */
   background: transparent; /* Optional: just make scrollbar invisible */
@@ -47,7 +55,7 @@ html {
 }
 
 .details_container p {
-  font-size: 1vw;
+  font-size: 1.2vw;
   color: #ffffff;
 }
 
@@ -162,7 +170,7 @@ html {
   position: fixed;
   left: 50%;
   transform: translate(-50%, 0);
-  bottom: 0;
+  bottom: 10%;
   margin: auto;
 }
 
@@ -203,15 +211,35 @@ html {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
+  width: 100dvw;
+  height: 100dvh;
   pointer-events: none;
+}
+
+.title {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: max-content;
+  height: max-content;
+  text-align: end;
+  margin-right: 1%;
+}
+
+.title_1 {
+  font-size: 1.5vw;
+}
+
+.title_2,
+.title_3 {
+  font-size: 1vw;
+  text-wrap: nowrap;
 }
 
 .metavian {
   position: absolute;
   right: 1%;
-  bottom: 0;
+  bottom: 1%;
   width: max-content;
   height: max-content;
   display: flex;
@@ -223,7 +251,7 @@ html {
   height: 1vw;
   margin: auto;
   margin-left: 0.5vw;
-  margin-top: 8%;
+  margin-top: 0;
   background-image: url("../public/icons/268x52_Logo_Purple.png");
   background-size: contain;
   background-repeat: no-repeat;
@@ -233,6 +261,11 @@ html {
 .powered_by_metavian {
   font-size: 1vw;
   text-wrap: nowrap;
+  margin: 0;
+}
+
+.powered_by_metavian p {
+  margin: 0;
 }
 
 @media (orientation: portrait) {
@@ -246,17 +279,26 @@ html {
     font-size: 1vh;
   }
   .metavian {
-    top: 1%;
+    /* top: 1%; */
     right: 1%;
   }
 
   .metavian_logo {
     width: 10vh;
-    height: 3vh;
+    height: 2.5vh;
     margin-left: 3%;
   }
 
   .powered_by_metavian {
     font-size: 2vh;
+  }
+
+  .title_1 {
+    font-size: 4.5vw;
+  }
+
+  .title_2,
+  .title_3 {
+    font-size: 3vw;
   }
 }
