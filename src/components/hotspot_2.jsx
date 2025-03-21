@@ -152,10 +152,6 @@ export default function Hotspot(props) {
       .catch((err) => console.error("Error loading hotspot:", err));
   }, []);
 
-  // useEffect(() => {
-  //   console.log(props.parentObject);
-  // }, [props.parentObject]);
-
   useEffect(() => {
     if (css2dObjectRef.current) {
       if (
@@ -172,15 +168,24 @@ export default function Hotspot(props) {
           hotspot.position.z
         );
         css2dObjectRef.current.visible = true;
+        // css2dObjectRef.current.element.style.display = "block";
+        console.log("visible hotspot " + props.name);
+        // console.log(css2dObjectRef.current);
         animate_line();
       } else {
         css2dObjectRef.current.visible = false;
+        //css2dObjectRef.current.element.style.display = "none";
       }
     }
 
     // console.log(props.name);
     // console.log(hotspot.position);
-  }, [props.currentHoveredPart]);
+  }, [
+    props.currentHoveredPart,
+    animate_line,
+    props.name,
+    props.allPartsPositionsRef,
+  ]);
 
   useEffect(() => {
     //console.log("entered useeffect");

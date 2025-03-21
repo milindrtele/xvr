@@ -4,7 +4,8 @@ export default function Overlays(props) {
   return (
     <div className="overlays">
       <div className="title">
-        <p className="title_1">XVR 205</p>
+        <p className="title_1">XVR</p>
+        {/* 205 */}
         <p className="title_2">Upcoming Headset</p>
         <p className="title_3">India's First Consumer Grade VR Headset</p>
       </div>

@@ -33,7 +33,8 @@ function XVRModel(props) {
   const group = useRef();
   const { camera } = useThree();
   const { scene, animations } = useGLTF(
-    "/models/VR Prototype Baked with anchors_3.glb"
+    "https://fashionix.sirv.com/xvr/models/VR%20Prototype%20Baked%20with%20anchors_3.glb"
+    //"/models/VR Prototype Baked with anchors_3.glb"
   );
   const { ref, actions, names, mixer } = useAnimations(animations, group);
   const raycaster = useRef(new THREE.Raycaster());
@@ -89,7 +90,6 @@ function XVRModel(props) {
       };
     } else {
       // Adding a new hotspot
-      console.log("Hotspot not found! Adding new hotspot.");
       props.allPartsPositionsRef.push({ name: name, position: { ...newPos } });
     }
 
@@ -173,10 +173,7 @@ function XVRModel(props) {
     if (props.css2DRendererRef && props.css2DSceneRef && camera) {
       props.css2DRendererRef.render(props.css2DSceneRef, camera);
     }
-
-    console.log(isgraphicsLevelsetRef.current);
     if (!isgraphicsLevelsetRef.current) {
-      console.log("entered g setup");
       if (frameNo < totalFramesToConsider) {
         frameNo++;
       } else {
@@ -284,7 +281,7 @@ function ResizeHandler(props) {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       gl.setSize(window.innerWidth, window.innerHeight);
-      gl.setPixelRatio(window.devicePixelRatio);
+      gl.setPixelRatio(window.devicePixelRatio / 2);
 
       if (props.css2DRendererRef?.current) {
         props.css2DRendererRef.current.setSize(
@@ -293,7 +290,20 @@ function ResizeHandler(props) {
         );
         props.css2DRendererRef.current.domElement.style.top = "0";
         props.css2DRendererRef.current.domElement.style.left = "0";
-        console.log(props.css2DRendererRef.current.domElement.style.width);
+        props.css2DRendererRef.current.domElement.style.width = "100dvw";
+        props.css2DRendererRef.current.domElement.style.height = "100dvh";
+        // props.css2DRendererRef.current.domElement.style.borderStyle = "solid";
+        // props.css2DRendererRef.current.domElement.style.borderWidth = "3px";
+        // props.css2DRendererRef.current.domElement.style.borderColor = "red";
+        // props.css2DRendererRef.current.domElement.style.backgroundColor =
+        //   "rgba(245, 0, 0, 0.26)";
+        // //props.css2DRendererRef.current.setPixelRatio(window.devicePixelRatio);
+        // console.log(window.devicePixelRatio);
+        // console.log(props.css2DRendererRef.current.domElement.style.width);
+        // console.log(props.css2DRendererRef.current.domElement.style.height);
+        // props.css2DRendererRef.current.domElement.style.transform = `scale(${
+        //   window.devicePixelRatio / 2
+        // })`;
       }
     };
 
@@ -538,7 +548,7 @@ export default function App() {
           enableZoom={false}
           autoRotate={autoRotateState}
         />
-        <Stats />
+        {/* <Stats /> */}
         {loading
           ? null
           : hotspotDetailsState.map((hotspot, index) => (
@@ -563,6 +573,7 @@ export default function App() {
       ) : (
         <>
           <Overlays />
+
           {isTouchDeviceRef.current ? (
             <div className="slidecontainer">
               <input

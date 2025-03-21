@@ -1,6 +1,6 @@
 html {
-  overflow: scroll;
-  overflow-x: hidden;
+  /* overflow: scroll;
+  overflow-x: hidden; */
 }
 
 body {
@@ -12,6 +12,7 @@ body {
   font-weight: 500;
   font-style: normal;
   font-variation-settings: "wdth" 100;
+  overflow: scroll;
 }
 
 Canvas {
@@ -21,11 +22,8 @@ Canvas {
 
 ::-webkit-scrollbar {
   width: 0; /* Remove scrollbar space */
+  height: 0;
   background: transparent; /* Optional: just make scrollbar invisible */
-}
-/* Optional: show position indicator in red */
-::-webkit-scrollbar-thumb {
-  background: #ff0000;
 }
 
 .hotspot_container {
