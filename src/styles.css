@@ -71,8 +71,8 @@ Canvas {
   position: absolute;
   width: 100%;
   height: 100%;
-  /* background-image: url("../../public/images/Screenshot 2024-12-18 151914.jpg"); */
-  background-image: url("https://fashionix.sirv.com/roof_configurator/images/Screenshot%202024-12-18%20151914.jpg");
+  background-image: url("../../public/images/Screenshot 2024-12-18 151914.jpg");
+  /* background-image: url("https://fashionix.sirv.com/roof_configurator/images/Screenshot%202024-12-18%20151914.jpg"); */
   filter: blur(8px);
   -webkit-filter: blur(8px);
   height: 100%;
@@ -216,22 +216,61 @@ Canvas {
 
 .title {
   position: absolute;
-  top: 0;
-  right: 0;
-  width: max-content;
+  top: 10%;
+  left: 0;
+  width: 100vw;
   height: max-content;
-  text-align: end;
-  margin-right: 1%;
+  display: flex;
+  flex-direction: row;
 }
 
 .title_1 {
   font-size: 1.5vw;
+  position: relative;
+  right: 0%;
+  width: 50vw;
+  height: 8vw;
+  background-image: url("../public/icons/xvr_asset.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: -100% 0%;
+  transition: background-position 2s ease;
+}
+
+.title_container {
+  /* position: relative; */
+  flex: 1;
+  height: max-content;
+  margin: auto;
+}
+
+.animate_title_1 {
+  background-position: 75% 0%;
 }
 
 .title_2,
 .title_3 {
-  font-size: 1vw;
+  position: relative;
+  font-size: 2vw;
   text-wrap: nowrap;
+  margin: 2%;
+  left: 200%;
+}
+
+.title_2 {
+  transition: left 2s ease 2s;
+}
+
+.title_3 {
+  transition: left 2s ease 3s;
+}
+
+.animate_title_2 {
+  left: 0% !important;
+}
+
+.animate_title_3 {
+  left: 10% !important;
 }
 
 .metavian {
@@ -278,7 +317,8 @@ Canvas {
   }
   .metavian {
     /* top: 1%; */
-    right: 1%;
+    left: 50%;
+    transform: translate(-50%, 0);
   }
 
   .metavian_logo {
@@ -291,12 +331,33 @@ Canvas {
     font-size: 2vh;
   }
 
+  .title {
+    flex-direction: column;
+  }
+
   .title_1 {
-    font-size: 4.5vw;
+    width: 100%;
+    height: 15vw;
+  }
+
+  .animate_title_1 {
+    background-position: 50% 0%;
+  }
+
+  .title_container {
+    margin-top: 2%;
   }
 
   .title_2,
   .title_3 {
-    font-size: 3vw;
+    font-size: 5vw;
+  }
+
+  .animate_title_2 {
+    left: 0% !important;
+  }
+
+  .animate_title_3 {
+    left: 8% !important;
   }
 }

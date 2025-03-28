@@ -33,8 +33,8 @@ function XVRModel(props) {
   const group = useRef();
   const { camera } = useThree();
   const { scene, animations } = useGLTF(
-    "https://fashionix.sirv.com/xvr/models/VR%20Prototype%20Baked%20with%20anchors_3.glb"
-    //"/models/VR Prototype Baked with anchors_3.glb"
+    //"https://fashionix.sirv.com/xvr/models/VR%20Prototype%20Baked%20with%20anchors_3.glb"
+    "/models/VR Prototype Baked with anchors_3.glb"
   );
   const { ref, actions, names, mixer } = useAnimations(animations, group);
   const raycaster = useRef(new THREE.Raycaster());
@@ -470,7 +470,7 @@ export default function App() {
         className="canvas"
         camera={{
           position: [0.6, 0.3, 0.6],
-          fov: orientation === "portrait" ? 75 : 35,
+          fov: orientation === "portrait" ? 50 : 35,
         }}
       >
         <ResizeHandler css2DRendererRef={css2dRendererRef} />
@@ -573,7 +573,6 @@ export default function App() {
       ) : (
         <>
           <Overlays />
-
           {isTouchDeviceRef.current ? (
             <div className="slidecontainer">
               <input
