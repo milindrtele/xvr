@@ -169,7 +169,7 @@ export default function Hotspot(props) {
         );
         css2dObjectRef.current.visible = true;
         // css2dObjectRef.current.element.style.display = "block";
-        console.log("visible hotspot " + props.name);
+        //console.log("visible hotspot " + props.name);
         // console.log(css2dObjectRef.current);
         animate_line();
       } else {

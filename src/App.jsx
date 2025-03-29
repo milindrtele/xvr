@@ -272,6 +272,16 @@ function XVRModel(props) {
   );
 }
 
+function AdaptivePixelRatio() {
+  const current = useThree((state) => state.performance.current);
+  const setPixelRatio = useThree((state) => state.setDpr);
+  useEffect(() => {
+    setPixelRatio((window.devicePixelRatio * current) / 20);
+    console.log(current);
+  }, [current, setPixelRatio]);
+  return null;
+}
+
 function ResizeHandler(props) {
   const { gl, camera, setSize } = useThree();
 
@@ -288,6 +298,18 @@ function ResizeHandler(props) {
           window.innerWidth,
           window.innerHeight
         );
+        // if (props.isTouchDevice) {
+        //   props.css2DRendererRef.current.setSize(
+        //     window.innerWidth / 4,
+        //     window.innerHeight / 4
+        //   );
+        // } else {
+        //   props.css2DRendererRef.current.setSize(
+        //     window.innerWidth,
+        //     window.innerHeight
+        //   );
+        // }
+
         props.css2DRendererRef.current.domElement.style.top = "0";
         props.css2DRendererRef.current.domElement.style.left = "0";
         props.css2DRendererRef.current.domElement.style.width = "100dvw";
@@ -465,6 +487,9 @@ export default function App() {
   return (
     <>
       <Canvas
+        // pixelRatio={0.1}
+        resize={{ scroll: true, debounce: { scroll: 50, resize: 0 } }}
+        dpr={isTouchDeviceRef.current ? 0.75 : 1}
         id="canvas_container"
         shadows={enableGroundReflector ? true : false}
         className="canvas"
@@ -473,7 +498,11 @@ export default function App() {
           fov: orientation === "portrait" ? 50 : 35,
         }}
       >
-        <ResizeHandler css2DRendererRef={css2dRendererRef} />
+        {/* <AdaptivePixelRatio />
+        <ResizeHandler
+          css2DRendererRef={css2dRendererRef}
+          isTouchDevice={isTouchDeviceRef.current}
+        /> */}
         <Environment
           files="/hdri/royal_esplanade_1k.hdr"
           //background
@@ -484,8 +513,8 @@ export default function App() {
         <directionalLight
           castShadow
           position={[-0.325, 0.55, 0.37]}
-          shadow-mapSize-width={1024}
-          shadow-mapSize-height={1024}
+          shadow-mapSize-width={512}
+          shadow-mapSize-height={512}
           shadow-camera-left={-0.5}
           shadow-camera-right={0.5}
           shadow-camera-top={0.5}
@@ -518,7 +547,7 @@ export default function App() {
             <MeshReflectorMaterial
               //
               blur={[400, 100]}
-              resolution={1024}
+              resolution={isTouchDeviceRef.current ? 256 : 1024}
               mixBlur={1}
               mixStrength={15}
               depthScale={1}
