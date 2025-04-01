@@ -6,9 +6,13 @@ export default function Overlays(props) {
   const title_3Ref = useRef(null);
 
   useEffect(() => {
-    title_1Ref.current.classList.add("animate_title_1");
-    title_2Ref.current.classList.add("animate_title_2");
-    title_3Ref.current.classList.add("animate_title_3");
+    if (title_1Ref.current && title_2Ref.current && title_3Ref.current) {
+      setTimeout(() => {
+        title_1Ref.current.classList.add("animate_title_1");
+        title_2Ref.current.classList.add("animate_title_2");
+        title_3Ref.current.classList.add("animate_title_3");
+      }, 1000);
+    }
   }, []);
   return (
     <div className="overlays">
@@ -24,6 +28,9 @@ export default function Overlays(props) {
           </p>
         </div>
       </div>
+      {props.isTouchDevice ? null : (
+        <div className="tip">Scroll For Exploded View</div>
+      )}
       <div className="metavian">
         {/* <div className="metavian_logo"></div> */}
         <div className="powered_by_metavian">

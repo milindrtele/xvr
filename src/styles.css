@@ -71,8 +71,8 @@ Canvas {
   position: absolute;
   width: 100%;
   height: 100%;
-  background-image: url("../../public/images/Screenshot 2024-12-18 151914.jpg");
-  /* background-image: url("https://fashionix.sirv.com/roof_configurator/images/Screenshot%202024-12-18%20151914.jpg"); */
+  /* background-image: url("../../public/images/Screenshot 2024-12-18 151914.jpg"); */
+  background-image: url("https://fashionix.sirv.com/roof_configurator/images/Screenshot%202024-12-18%20151914.jpg");
   filter: blur(8px);
   -webkit-filter: blur(8px);
   height: 100%;
@@ -233,7 +233,7 @@ Canvas {
   background-image: url("../public/icons/xvr_asset.png");
   background-size: contain;
   background-repeat: no-repeat;
-  background-position: -100% 0%;
+  background-position: -200% 0%;
   transition: background-position 2s ease;
 }
 
@@ -305,6 +305,13 @@ Canvas {
   margin: 0;
 }
 
+.tip {
+  position: absolute;
+  left: 1vw;
+  bottom: 1vw;
+  font-size: 1vw;
+}
+
 @media (orientation: portrait) {
   .svg_container {
     width: 15vh;
@@ -337,7 +344,7 @@ Canvas {
 
   .title_1 {
     width: 100%;
-    height: 15vw;
+    height: 22vw;
   }
 
   .animate_title_1 {
@@ -350,7 +357,7 @@ Canvas {
 
   .title_2,
   .title_3 {
-    font-size: 5vw;
+    font-size: 6vw;
   }
 
   .animate_title_2 {

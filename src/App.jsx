@@ -33,8 +33,8 @@ function XVRModel(props) {
   const group = useRef();
   const { camera } = useThree();
   const { scene, animations } = useGLTF(
-    //"https://fashionix.sirv.com/xvr/models/VR%20Prototype%20Baked%20with%20anchors_3.glb"
-    "/models/VR Prototype Baked with anchors_3.glb"
+    "https://fashionix.sirv.com/xvr/models/VR%20Prototype%20Baked%20with%20anchors_3.glb"
+    //"/models/VR Prototype Baked with anchors_3.glb"
   );
   const { ref, actions, names, mixer } = useAnimations(animations, group);
   const raycaster = useRef(new THREE.Raycaster());
@@ -215,25 +215,20 @@ function XVRModel(props) {
   const handlePointerOver = (event) => {
     event.stopPropagation();
 
-    // Convert pointer position to normalized device coordinates
     mouse.current.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.current.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-    // Perform raycasting
     raycaster.current.setFromCamera(mouse.current, camera);
     const intersects = raycaster.current.intersectObject(
       parentObjectRef.current,
       true
     );
 
-    // Reset the previous hovered object's emissive color if it exists and is different from the new one
-    if (prevHovered.current && prevHovered.current !== intersects[0]?.object) {
-      if (
-        prevHovered.current.material &&
-        prevHovered.current.material.emissive
-      ) {
-        prevHovered.current.material.emissive.set(0x000000);
-      }
+    if (
+      prevHovered.current &&
+      (!intersects.length || prevHovered.current !== intersects[0]?.object)
+    ) {
+      prevHovered.current.material?.emissive.set(0x000000);
       prevHovered.current = null;
     }
 
@@ -241,12 +236,48 @@ function XVRModel(props) {
       const hoveredObject = intersects[0].object;
       props.setCurrentHoveredObject(hoveredObject);
 
-      if (hoveredObject.material && hoveredObject.material.emissive) {
-        hoveredObject.material.emissive.set(0x696868); // color
+      if (hoveredObject.material?.emissive) {
+        hoveredObject.material.emissive.set(0x696868);
         prevHovered.current = hoveredObject;
       }
     }
   };
+
+  // const handlePointerOver = (event) => {
+  //   event.stopPropagation();
+
+  //   // Convert pointer position to normalized device coordinates
+  //   mouse.current.x = (event.clientX / window.innerWidth) * 2 - 1;
+  //   mouse.current.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+  //   // Perform raycasting
+  //   raycaster.current.setFromCamera(mouse.current, camera);
+  //   const intersects = raycaster.current.intersectObject(
+  //     parentObjectRef.current,
+  //     true
+  //   );
+
+  //   // Reset the previous hovered object's emissive color if it exists and is different from the new one
+  //   if (prevHovered.current && prevHovered.current !== intersects[0]?.object) {
+  //     if (
+  //       prevHovered.current.material &&
+  //       prevHovered.current.material.emissive
+  //     ) {
+  //       prevHovered.current.material.emissive.set(0x000000);
+  //     }
+  //     prevHovered.current = null;
+  //   }
+
+  //   if (intersects.length > 0) {
+  //     const hoveredObject = intersects[0].object;
+  //     props.setCurrentHoveredObject(hoveredObject);
+
+  //     if (hoveredObject.material && hoveredObject.material.emissive) {
+  //       hoveredObject.material.emissive.set(0x696868); // color
+  //       prevHovered.current = hoveredObject;
+  //     }
+  //   }
+  // };
 
   const handlePointerOut = () => {
     if (prevHovered.current)
@@ -601,7 +632,7 @@ export default function App() {
         <Loading />
       ) : (
         <>
-          <Overlays />
+          <Overlays isTouchDevice={isTouchDeviceRef.current} />
           {isTouchDeviceRef.current ? (
             <div className="slidecontainer">
               <input
