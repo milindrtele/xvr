@@ -12,7 +12,7 @@ body {
   font-weight: 500;
   font-style: normal;
   font-variation-settings: "wdth" 100;
-  overflow: scroll;
+  overflow: hidden;
 }
 
 Canvas {
@@ -63,16 +63,17 @@ Canvas {
   z-index: 1000;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
+  width: 100dvw;
+  height: 100dvh;
+  overflow: hidden;
 }
 
 .loading_screen_background {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  width: 100dvw;
+  height: 100dvh;
   /* background-image: url("../../public/images/Screenshot 2024-12-18 151914.jpg"); */
-  background-image: url("https://fashionix.sirv.com/roof_configurator/images/Screenshot%202024-12-18%20151914.jpg");
+  /* background-image: url("https://fashionix.sirv.com/roof_configurator/images/Screenshot%202024-12-18%20151914.jpg"); */
   filter: blur(8px);
   -webkit-filter: blur(8px);
   height: 100%;
@@ -91,6 +92,15 @@ Canvas {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+}
+
+.metavian_logo_art {
+  width: 150px !important;
+  height: 150px !important;
+  background-image: url("../public/icons/metavian-logo.png");
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .loader_box {
@@ -170,6 +180,10 @@ Canvas {
   transform: translate(-50%, 0);
   bottom: 10%;
   margin: auto;
+}
+
+.slidecontainer p {
+  text-align: center;
 }
 
 .slider {
@@ -339,7 +353,12 @@ Canvas {
   }
 
   .title {
+    top: 5%;
     flex-direction: column;
+  }
+
+  .loading_screen_content {
+    top: calc(50% - 20px);
   }
 
   .title_1 {

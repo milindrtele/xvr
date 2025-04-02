@@ -33,7 +33,8 @@ function XVRModel(props) {
   const group = useRef();
   const { camera } = useThree();
   const { scene, animations } = useGLTF(
-    "https://fashionix.sirv.com/xvr/models/VR%20Prototype%20Baked%20with%20anchors_3.glb"
+    "https://res.cloudinary.com/dyrwl8j9r/image/upload/v1743588989/VR_Prototype_Baked_with_anchors_3_hkak5v.glb"
+    //"https://fashionix.sirv.com/xvr/models/VR%20Prototype%20Baked%20with%20anchors_3.glb"
     //"/models/VR Prototype Baked with anchors_3.glb"
   );
   const { ref, actions, names, mixer } = useAnimations(animations, group);
@@ -401,7 +402,7 @@ export default function App() {
 
   const timeOutRef = useRef(null);
 
-  const config = { size: 12.5, focus: 0.0, samples: 10 };
+  const config = { size: 8, focus: 5.0, samples: 50 };
 
   const hotspotDetails = [
     {
@@ -520,7 +521,7 @@ export default function App() {
       <Canvas
         // pixelRatio={0.1}
         resize={{ scroll: true, debounce: { scroll: 50, resize: 0 } }}
-        dpr={isTouchDeviceRef.current ? 0.75 : 1}
+        dpr={isTouchDeviceRef.current ? 1 : 1}
         id="canvas_container"
         shadows={enableGroundReflector ? true : false}
         className="canvas"
@@ -578,7 +579,7 @@ export default function App() {
             <MeshReflectorMaterial
               //
               blur={[400, 100]}
-              resolution={isTouchDeviceRef.current ? 256 : 1024}
+              resolution={isTouchDeviceRef.current ? 512 : 1024}
               mixBlur={1}
               mixStrength={15}
               depthScale={1}
@@ -628,6 +629,7 @@ export default function App() {
             ))}
       </Canvas>
 
+      {/* <Loading /> */}
       {loading ? (
         <Loading />
       ) : (
@@ -646,6 +648,7 @@ export default function App() {
                   setSliderProgress(e.target.value);
                 }}
               ></input>
+              <p>Drag for exploded view</p>
             </div>
           ) : null}
         </>

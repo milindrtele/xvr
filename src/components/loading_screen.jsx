@@ -13,9 +13,10 @@ export default function Loading(props) {
       <div className="loading_screen">
         {/* <div className={[styles.loading_screen_background].join(" ")}></div> */}
         <div className="loading_screen_content">
-          <div className="loader_box">
+          <div className="metavian_logo_art"></div>
+          {/* <div className="loader_box">
             <div className="loader"></div>
-          </div>
+          </div> */}
           {/* <div className={[styles.loading_bar_container].join(" ")}>
             <div
               ref={loading_barRef}
